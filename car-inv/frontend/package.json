@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "preview": "vite preview",
     "build": "tsc -b && vite build",
     "postbuild": "node scripts/generate-seo.mjs",
     "typecheck": "tsc -b --pretty false",
