@@ -1,5 +1,5 @@
-ALTER TABLE `adminuser` MODIFY `passwordHash` VARCHAR(191) NOT NULL;
-ALTER TABLE `homepagecontent` MODIFY `id` VARCHAR(191) NOT NULL DEFAULT 'default';
+ALTER TABLE `AdminUser` MODIFY `passwordHash` VARCHAR(191) NOT NULL;
+ALTER TABLE `HomepageContent` MODIFY `id` VARCHAR(191) NOT NULL DEFAULT 'default';
 
 CREATE TABLE `VehicleMake` (
     `id` VARCHAR(191) NOT NULL,
