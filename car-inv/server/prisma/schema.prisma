@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model HomepageContent {
+  id             String          @id @default("default")
+  site           Json
+  hero           Json
+  howItWorks     Json
+  faq            Json
+  benefitsIntro  Json
+  showroom       Json
+  about          Json
+  bookingCta     Json
+  footer         Json
+  steps          HomepageStep[]
+  faqs           HomepageFaq[]
+  benefits       HomepageBenefit[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model HomepageStep {
+  id          String          @id @default(cuid())
+  homepageId  String
+  number      String
+  title       String
+  description String        @db.Text
+  iconKey     String
+  displayOrder Int
+  isActive    Boolean         @default(true)
+  homepage    HomepageContent @relation(fields: [homepageId], references: [id], onDelete: Cascade)
+
+  @@index([homepageId, isActive, displayOrder])
+}
+
+model HomepageFaq {
+  id           String          @id @default(cuid())
+  homepageId   String
+  question     String
+  answer       String        @db.Text
+  displayOrder Int
+  isActive     Boolean         @default(true)
+  homepage     HomepageContent @relation(fields: [homepageId], references: [id], onDelete: Cascade)
+
+  @@index([homepageId, isActive, displayOrder])
+}
+
+model HomepageBenefit {
+  id           String          @id @default(cuid())
+  homepageId   String
+  iconKey      String
+  title        String
+  description  String        @db.Text
+  tone         String
+  displayOrder Int
+  isActive     Boolean         @default(true)
+  homepage     HomepageContent @relation(fields: [homepageId], references: [id], onDelete: Cascade)
+
+  @@index([homepageId, isActive, displayOrder])
+}
+
+model MediaAsset {
+  id             String   @id @default(cuid())
+  originalName   String
+  storageName    String   @unique
+  mimeType       String
+  url            String
+  width          Int
+  height         Int
+  bytes          Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  source    String   @default("homepage")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash  String
+  role         String         @default("admin")
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  sessions     AdminSession[]
+}
+
+model AdminSession {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  userId     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model VehicleMake {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  vehicles  Vehicle[]
+
+  @@index([isActive, name])
+}
+
+model VehicleFuelType {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  vehicles  Vehicle[]
+
+  @@index([isActive, name])
+}
+
+model Vehicle {
+  id               String              @id @default(cuid())
+  slug             String              @unique
+  makeId           String
+  fuelTypeId       String
+  model            String
+  trim             String
+  category         String
+  year             Int
+  price            Decimal             @db.Decimal(12, 2)
+  mileage          Int
+  priceNegotiable  Boolean             @default(false)
+  exterior         String
+  interior         String
+  vin              String              @unique
+  engine           String
+  power            String
+  torque           String
+  transmission     String
+  drivetrain       String
+  range            String?
+  description      String              @db.Text
+  isPublished      Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  make             VehicleMake         @relation(fields: [makeId], references: [id], onDelete: Restrict)
+  fuelType         VehicleFuelType     @relation(fields: [fuelTypeId], references: [id], onDelete: Restrict)
+  photos           VehiclePhoto[]
+  documents        VehicleDocument[]
+  highlights       VehicleHighlight[]
+  customFields     VehicleCustomField[]
+  enquiries        VehicleEnquiry[]
+
+  @@index([makeId, isPublished])
+  @@index([fuelTypeId, isPublished])
+  @@index([isPublished, updatedAt])
+}
+
+enum VehicleEnquiryStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  PURCHASED
+  LOST
+  CLOSED
+}
+
+model VehicleEnquiry {
+  id                String               @id @default(cuid())
+  vehicleId         String?
+  vehicleSlug       String?              @db.VarChar(180)
+  vehicleLabel      String               @db.VarChar(240)
+  vehicleImageUrl   String?              @db.VarChar(500)
+  vehicleImageAlt   String?              @db.VarChar(240)
+  name              String               @db.VarChar(160)
+  phone             String?              @db.VarChar(80)
+  email             String?              @db.VarChar(254)
+  fullAddress       String               @db.Text
+  status            VehicleEnquiryStatus @default(NEW)
+  remarks           String?              @db.Text
+  purchasePrice     Decimal?             @db.Decimal(12, 2)
+  purchaseDate      DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  vehicle            Vehicle?             @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  remarkHistory      VehicleEnquiryRemark[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([vehicleId])
+  @@index([email])
+}
+
+model VehicleEnquiryRemark {
+  id        String         @id @default(cuid())
+  enquiryId String
+  text      String         @db.Text
+  createdAt DateTime       @default(now())
+  enquiry   VehicleEnquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  @@index([enquiryId, createdAt])
+}
+
+model VehiclePhoto {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  storageName  String   @unique
+  originalName String
+  url          String
+  alt          String
+  width        Int
+  height       Int
+  bytes        Int
+  displayOrder Int
+  createdAt    DateTime @default(now())
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, displayOrder])
+}
+
+model VehicleDocument {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  name         String
+  status       String
+  url          String?  @db.VarChar(500)
+  displayOrder Int
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, displayOrder])
+}
+
+model VehicleHighlight {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  text         String
+  displayOrder Int
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, displayOrder])
+}
+
+model VehicleCustomField {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  label        String
+  value        String   @db.Text
+  displayOrder Int
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, displayOrder])
+}
