@@ -49,6 +49,9 @@ npm run format:check
 ## Frontend production build
 
 The frontend production build requires a deployed API URL and generates SEO files in `frontend/dist`.
+The build queries the public inventory endpoint to add published vehicle detail URLs to the sitemap,
+so `VITE_API_BASE_URL` must be reachable during production builds. If the API is unavailable, the
+build completes with only the static public routes in the sitemap.
 Set these values in `frontend/.env.production` before building:
 
 ```env
@@ -62,9 +65,11 @@ Then run:
 npm run build --workspace frontend
 ```
 
-Configure the static host to serve `frontend/dist/index.html` for unknown application routes so
-browser refreshes work for `/inventory`, vehicle details, and legal pages. Do not deploy the
-development `VITE_API_BASE_URL` value.
+The production frontend build also runs a React server renderer and writes crawlable HTML to
+`frontend/dist/index.html`, `frontend/dist/inventory/index.html`, the legal route directories, and
+one directory for each published vehicle. The production server is `frontend/server.mjs`, which
+serves those files, rechecks vehicle slugs against the inventory API, and returns HTTP 404 for
+unknown routes. Do not deploy the development `VITE_API_BASE_URL` value.
 
 ## PM2 production deployment
 
@@ -94,8 +99,8 @@ DRIVA_API_PORT=3010 DRIVA_FRONTEND_PORT=8090 pm2 start ecosystem.config.cjs
 ```
 
 Configure the reverse proxy to send API requests to `http://127.0.0.1:3001` and frontend requests
-to `http://127.0.0.1:8083` (or the overridden ports). The frontend proxy must fall back to
-`frontend/dist/index.html` for client-side routes.
+to `http://127.0.0.1:8083` (or the overridden ports). Set `DRIVA_INVENTORY_API_URL` when the
+frontend server needs a non-default internal inventory API URL.
 
 ## Nginx reverse proxy
 

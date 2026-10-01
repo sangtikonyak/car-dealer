@@ -1,4 +1,5 @@
 import { cleanup, render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DocumentMetadata } from './DocumentMetadata';
@@ -19,11 +20,15 @@ afterEach(() => {
   document.title = '';
 });
 
-const renderMetadata = () =>
+const renderMetadata = (initialEntry = '/inventory') =>
   render(
-    <MemoryRouter initialEntries={['/inventory']}>
-      <DocumentMetadata />
-    </MemoryRouter>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <DocumentMetadata />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 
 describe('DocumentMetadata', () => {
@@ -40,18 +45,18 @@ describe('DocumentMetadata', () => {
     homepageContentMock.title = 'Driva — Premium pre-owned vehicles';
     renderMetadata();
 
-    expect(document.title).toBe('Driva — Premium pre-owned vehicles');
+    expect(document.title).toBe('Used cars for sale in Guindy, Chennai | Driva');
     expect(document.querySelector('meta[property="og:site_name"]')).toHaveAttribute(
       'content',
       'Driva',
     );
     expect(document.querySelector('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'Driva — Premium pre-owned vehicles',
+      'Used cars for sale in Guindy, Chennai | Driva',
     );
     expect(document.querySelector('meta[name="twitter:title"]')).toHaveAttribute(
       'content',
-      'Driva — Premium pre-owned vehicles',
+      'Used cars for sale in Guindy, Chennai | Driva',
     );
     expect(document.querySelector('link[rel="icon"]')).toHaveAttribute(
       'href',
@@ -72,7 +77,7 @@ describe('DocumentMetadata', () => {
     homepageContentMock.title = 'Northstar Motors showroom';
     renderMetadata();
 
-    expect(document.title).toBe('Northstar Motors showroom');
+    expect(document.title).toBe('Used cars for sale in Guindy, Chennai | Northstar Motors');
     expect(document.querySelector('meta[property="og:site_name"]')).toHaveAttribute(
       'content',
       'Northstar Motors',
@@ -90,19 +95,45 @@ describe('DocumentMetadata', () => {
 
     homepageContentMock.brandName = 'Driva';
     homepageContentMock.title = 'Driva showroom';
-    const view = renderMetadata();
+    const view = renderMetadata('/');
 
     homepageContentMock.title = 'Driva premium vehicles';
     view.rerender(
-      <MemoryRouter initialEntries={['/inventory']}>
-        <DocumentMetadata />
-      </MemoryRouter>,
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <MemoryRouter initialEntries={['/']}>
+          <DocumentMetadata />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(document.title).toBe('Driva premium vehicles');
     expect(document.querySelector('meta[property="og:title"]')).toHaveAttribute(
       'content',
       'Driva premium vehicles',
+    );
+  });
+
+  it('keeps query-string inventory views on the clean canonical URL', () => {
+    document.head.innerHTML = '<meta name="robots" />';
+
+    renderMetadata('/inventory?make=audi&sort=latest');
+
+    const canonical = document.querySelector('link[rel="canonical"]');
+    expect(canonical).toHaveAttribute('href', expect.stringMatching(/\/inventory$/u));
+    expect(canonical?.getAttribute('href')).not.toContain('?');
+  });
+
+  it('marks admin routes as private and non-indexable', () => {
+    document.head.innerHTML = '<meta name="robots" />';
+
+    renderMetadata('/admin/login');
+
+    expect(document.title).toBe('Admin | Driva');
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex,nofollow',
     );
   });
 });

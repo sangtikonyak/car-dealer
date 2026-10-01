@@ -1,6 +1,7 @@
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { DocumentMetadata } from '../../../app/DocumentMetadata';
 import { useAdminLogin, useAdminSession } from '../hooks/useAdminSession';
 
 export function AdminLoginPage() {
@@ -25,6 +26,7 @@ export function AdminLoginPage() {
 
   return (
     <main className="admin-auth-page">
+      <DocumentMetadata />
       <section className="admin-auth-brand-panel">
         <Link className="admin-brand-lockup" to="/" aria-label="Back to Driva homepage">
           <span className="admin-brand-mark">D</span>

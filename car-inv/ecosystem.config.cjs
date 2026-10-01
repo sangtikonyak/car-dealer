@@ -23,13 +23,17 @@ module.exports = {
       name: 'driva-car-inv-frontend',
       cwd: path.join(__dirname, 'frontend'),
       script: 'npm',
-      args: `run preview -- --host 127.0.0.1 --port ${frontendPort}`,
+      args: 'run serve',
       interpreter: 'none',
       autorestart: true,
       watch: false,
       max_memory_restart: '256M',
       env: {
         NODE_ENV: 'production',
+        HOST: '127.0.0.1',
+        PORT: frontendPort,
+        DRIVA_INVENTORY_API_URL:
+          process.env.DRIVA_INVENTORY_API_URL ?? `http://127.0.0.1:${apiPort}/api/v1`,
       },
     },
   ],

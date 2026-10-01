@@ -3,7 +3,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage'] },
+  { ignores: ['dist', 'dist-server', 'coverage'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -13,6 +13,15 @@ export default tseslint.config(
       globals: {
         ...globals.browser,
         ...globals.es2024,
+      },
+    },
+  },
+  {
+    files: ['**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      globals: {
+        ...globals.node,
       },
     },
   },
