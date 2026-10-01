@@ -82,6 +82,11 @@ frontend API URL must point to the public API address, while the server `CLIENT_
 the public frontend address. Keep database credentials, admin credentials, and API keys out of the
 PM2 configuration file.
 
+Admin session cookies default to `Secure` in production and non-secure in development. For a
+temporary IP-only HTTP deployment, set `ADMIN_SESSION_COOKIE_SECURE=false` in `server/.env`.
+This allows login over HTTP but is not suitable for public production traffic because credentials
+and sessions are not encrypted in transit.
+
 ```bash
 npm ci
 npm run db:migrate --workspace server

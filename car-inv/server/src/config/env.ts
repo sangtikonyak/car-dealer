@@ -38,6 +38,10 @@ const environmentSchema = z
       .trim()
       .regex(/^[A-Za-z0-9_-]+$/u)
       .default('driva_admin_session'),
+    ADMIN_SESSION_COOKIE_SECURE: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true')
+      .optional(),
     UPLOAD_DIR: z
       .string()
       .trim()

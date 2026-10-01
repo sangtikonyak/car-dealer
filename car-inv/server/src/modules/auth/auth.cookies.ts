@@ -3,25 +3,38 @@ import type { Environment } from '../../config/env.js';
 
 const cookieValue = (value: string): string => encodeURIComponent(value);
 
+const shouldUseSecureCookie = (
+  environment: Pick<Environment, 'ADMIN_SESSION_COOKIE_SECURE' | 'NODE_ENV'>,
+): boolean => environment.ADMIN_SESSION_COOKIE_SECURE ?? environment.NODE_ENV === 'production';
+
 export const setAdminSessionCookie = (
   response: Response,
-  environment: Pick<Environment, 'ADMIN_SESSION_COOKIE' | 'ADMIN_SESSION_TTL_HOURS' | 'NODE_ENV'>,
+  environment: Pick<
+    Environment,
+    | 'ADMIN_SESSION_COOKIE'
+    | 'ADMIN_SESSION_TTL_HOURS'
+    | 'ADMIN_SESSION_COOKIE_SECURE'
+    | 'NODE_ENV'
+  >,
   token: string,
 ): void => {
   const maxAge = environment.ADMIN_SESSION_TTL_HOURS * 60 * 60;
   response.setHeader(
     'Set-Cookie',
-    `${environment.ADMIN_SESSION_COOKIE}=${cookieValue(token)}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict${environment.NODE_ENV === 'production' ? '; Secure' : ''}`,
+    `${environment.ADMIN_SESSION_COOKIE}=${cookieValue(token)}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict${shouldUseSecureCookie(environment) ? '; Secure' : ''}`,
   );
 };
 
 export const clearAdminSessionCookie = (
   response: Response,
-  environment: Pick<Environment, 'ADMIN_SESSION_COOKIE' | 'NODE_ENV'>,
+  environment: Pick<
+    Environment,
+    'ADMIN_SESSION_COOKIE' | 'ADMIN_SESSION_COOKIE_SECURE' | 'NODE_ENV'
+  >,
 ): void => {
   response.setHeader(
     'Set-Cookie',
-    `${environment.ADMIN_SESSION_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict${environment.NODE_ENV === 'production' ? '; Secure' : ''}`,
+    `${environment.ADMIN_SESSION_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict${shouldUseSecureCookie(environment) ? '; Secure' : ''}`,
   );
 };
 
