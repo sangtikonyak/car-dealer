@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CarFront, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { fetchInventory, fetchInventoryOptions } from '../api';
 import { InventoryNotice } from '../components/InventoryNotice';
 import { InventoryFilters, type InventorySort } from '../components/InventoryFilters';
 import { VehicleCard } from '../components/VehicleCard';
+import { trackAnalyticsEvent } from '../../analytics/hooks/useAnalyticsTracking';
 
 const INVENTORY_PAGE_SIZE = 12;
 
@@ -61,6 +62,36 @@ export function InventoryPage() {
     setFuel('all');
     setPage(1);
   };
+
+  useEffect(() => {
+    if (
+      inventory.isLoading ||
+      inventory.isError ||
+      (!search && make === 'all' && fuel === 'all' && page === 1)
+    )
+      return;
+    const timer = window.setTimeout(() => {
+      trackAnalyticsEvent({
+        eventType: 'INVENTORY_SEARCHED',
+        route: '/inventory',
+        searchTerm: search.trim() || undefined,
+        makeSlug: make === 'all' ? undefined : make,
+        fuelTypeSlug: fuel === 'all' ? undefined : fuel,
+        sort,
+        resultCount: inventory.data?.total ?? 0,
+      });
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [
+    fuel,
+    inventory.data?.total,
+    inventory.isError,
+    inventory.isLoading,
+    make,
+    page,
+    search,
+    sort,
+  ]);
 
   return (
     <main className="inventory-page">

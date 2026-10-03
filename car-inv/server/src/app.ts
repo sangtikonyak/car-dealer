@@ -22,7 +22,14 @@ import {
   createAdminEnquiryRoutes,
   createEnquiryRoutes,
 } from './modules/enquiries/enquiry.routes.js';
-import { createAdminInventoryRoutes, createInventoryRoutes } from './modules/inventory/inventory.routes.js';
+import {
+  createAdminInventoryRoutes,
+  createInventoryRoutes,
+} from './modules/inventory/inventory.routes.js';
+import {
+  createAdminAnalyticsRoutes,
+  createAnalyticsRoutes,
+} from './modules/analytics/analytics.routes.js';
 
 export interface AppDependencies {
   environment: Environment;
@@ -77,12 +84,14 @@ export const createApp = ({ environment, prisma }: AppDependencies): Express => 
 
   app.use('/api/v1/homepage', createHomepageRoutes(prisma));
   app.use('/api/v1/inventory', createInventoryRoutes(prisma, environment));
+  app.use('/api/v1/analytics', createAnalyticsRoutes(prisma));
   app.use('/api/v1/enquiries', createEnquiryRoutes(prisma));
   app.use('/api/v1/admin/auth', createAuthRoutes(prisma, environment));
   app.use('/api/v1/admin/inventory', createAdminInventoryRoutes(prisma, environment));
   app.use('/api/v1/admin/enquiries', createAdminEnquiryRoutes(prisma, environment));
   app.use('/api/v1/admin/homepage', createAdminHomepageRoutes(prisma, environment));
   app.use('/api/v1/admin/media', createMediaRoutes(prisma, environment));
+  app.use('/api/v1/admin/analytics', createAdminAnalyticsRoutes(prisma, environment));
   app.use('/api/v1/newsletter-subscriptions', createNewsletterRoutes(prisma));
   app.use(
     '/api/v1/admin/newsletter-subscriptions',

@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  BarChart3,
   CalendarDays,
   CarFront,
   FileText,
@@ -37,8 +38,9 @@ import { AdminInventoryPanel } from '../components/AdminInventoryPanel';
 import { AdminEnquiriesPanel } from '../components/AdminEnquiriesPanel';
 import { useSnackbar } from '../../../components/Snackbar';
 import { DocumentMetadata } from '../../../app/DocumentMetadata';
+import { AnalyticsPage } from '../../analytics/pages/AnalyticsPage';
 
-type DashboardSection = 'overview' | 'homepage' | 'inventory' | 'media' | 'enquiries';
+type DashboardSection = 'overview' | 'homepage' | 'inventory' | 'media' | 'enquiries' | 'analytics';
 type EnquiryDateRange = { from: string; to: string };
 
 const homepageNavigationSections = (Object.keys(homepageSectionLabels) as HomepageSection[]).filter(
@@ -99,9 +101,11 @@ export function AdminDashboardPage() {
         ? 'media'
         : adminPath[0] === 'enquiries'
           ? 'enquiries'
-          : adminPath[0] === 'inventory'
-            ? 'inventory'
-            : 'overview';
+          : adminPath[0] === 'analytics'
+            ? 'analytics'
+            : adminPath[0] === 'inventory'
+              ? 'inventory'
+              : 'overview';
   const homepageSection = section === 'homepage' ? getHomepageSection(adminPath[1]) : 'overview';
 
   const homepage = useQuery({
@@ -160,13 +164,15 @@ export function AdminDashboardPage() {
   };
 
   return (
-    <main className="admin-shell">
+    <main className={`admin-shell${section === 'analytics' ? ' admin-shell-analytics-mode' : ''}`}>
       <DocumentMetadata />
       <aside className={`admin-sidebar ${sidebarOpen ? '' : 'admin-sidebar-collapsed'}`}>
         <div className="admin-sidebar-top">
           <Link className="admin-sidebar-brand" to="/admin" aria-label="Admin dashboard home">
             <span className="admin-brand-mark">D</span>
-            {sidebarOpen ? <span>Driva control room</span> : null}
+            {sidebarOpen ? (
+              <span>{section === 'analytics' ? 'Driva' : 'Driva control room'}</span>
+            ) : null}
           </Link>
           <button
             className="admin-sidebar-collapse"
@@ -203,6 +209,13 @@ export function AdminDashboardPage() {
             onClick={() => navigateTo('enquiries')}
           />
           <AdminNavButton
+            active={section === 'analytics'}
+            icon={<BarChart3 size={18} />}
+            label="Analytics"
+            collapsed={!sidebarOpen}
+            onClick={() => navigateTo('analytics')}
+          />
+          <AdminNavButton
             active={section === 'homepage'}
             icon={<FileText size={18} />}
             label="Homepage"
@@ -226,7 +239,7 @@ export function AdminDashboardPage() {
           <AdminNavButton
             active={section === 'inventory'}
             icon={<CarFront size={18} />}
-            label="Inventory"
+            label="Cars"
             collapsed={!sidebarOpen}
             onClick={() => navigateTo('inventory')}
           />
@@ -319,7 +332,14 @@ export function AdminDashboardPage() {
         {mobileNavOpen ? (
           <div className="admin-mobile-nav">
             {(
-              ['overview', 'enquiries', 'homepage', 'inventory', 'media'] as DashboardSection[]
+              [
+                'overview',
+                'enquiries',
+                'analytics',
+                'homepage',
+                'inventory',
+                'media',
+              ] as DashboardSection[]
             ).map((item) => (
               <button
                 type="button"
@@ -424,6 +444,7 @@ export function AdminDashboardPage() {
             />
           ) : null}
           {section === 'enquiries' ? <AdminEnquiriesPanel /> : null}
+          {section === 'analytics' ? <AnalyticsPage /> : null}
         </div>
       </div>
     </main>
@@ -434,9 +455,10 @@ function sectionTitle(section: DashboardSection): string {
   return {
     overview: 'Overview',
     homepage: 'Homepage editor',
-    inventory: 'Inventory',
+    inventory: 'Cars',
     media: 'Media library',
     enquiries: 'Enquiries',
+    analytics: 'Analytics',
   }[section];
 }
 

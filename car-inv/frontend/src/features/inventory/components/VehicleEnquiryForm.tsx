@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
 import { submitVehicleEnquiry } from '../api';
+import { trackAnalyticsEvent } from '../../analytics/hooks/useAnalyticsTracking';
 
 interface VehicleEnquiryFormProps {
   vehicleSlug: string;
@@ -43,6 +44,14 @@ export function VehicleEnquiryForm({
   vehicleLabel,
   onClose,
 }: VehicleEnquiryFormProps) {
+  useEffect(() => {
+    trackAnalyticsEvent({
+      eventType: 'ENQUIRY_STARTED',
+      route: `/inventory/${vehicleSlug}`,
+      vehicleSlug,
+      vehicleLabel,
+    });
+  }, [vehicleLabel, vehicleSlug]);
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,6 +81,12 @@ export function VehicleEnquiryForm({
         phone: values.phone.trim(),
         email: values.email.trim(),
         fullAddress: values.address.trim(),
+      });
+      trackAnalyticsEvent({
+        eventType: 'ENQUIRY_SUBMITTED',
+        route: `/inventory/${vehicleSlug}`,
+        vehicleSlug,
+        vehicleLabel,
       });
       setIsSubmitted(true);
       onClose();

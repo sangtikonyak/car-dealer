@@ -269,3 +269,33 @@ model VehicleCustomField {
 
   @@index([vehicleId, displayOrder])
 }
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  eventType     String   @db.VarChar(48)
+  visitorId     String   @db.VarChar(80)
+  sessionId     String   @db.VarChar(80)
+  route         String   @db.VarChar(255)
+  vehicleId     String?
+  vehicleSlug   String?  @db.VarChar(180)
+  vehicleLabel  String?  @db.VarChar(240)
+  searchTerm    String?  @db.VarChar(180)
+  makeSlug      String?  @db.VarChar(120)
+  fuelTypeSlug  String?  @db.VarChar(120)
+  sort          String?  @db.VarChar(32)
+  resultCount   Int?
+  referrer      String?  @db.VarChar(500)
+  utmSource     String?  @db.VarChar(120)
+  utmMedium     String?  @db.VarChar(120)
+  utmCampaign   String?  @db.VarChar(160)
+  deviceType    String?  @db.VarChar(24)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt, eventType])
+  @@index([eventType, createdAt])
+  @@index([vehicleId, eventType, createdAt])
+  @@index([visitorId, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([searchTerm, createdAt])
+}

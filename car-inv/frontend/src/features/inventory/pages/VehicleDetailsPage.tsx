@@ -17,6 +17,7 @@ import { fetchVehicle } from '../api';
 import { InventoryNotice } from '../components/InventoryNotice';
 import { VehicleEnquiryForm } from '../components/VehicleEnquiryForm';
 import { VehicleGallery } from '../components/VehicleGallery';
+import { trackAnalyticsEvent } from '../../analytics/hooks/useAnalyticsTracking';
 
 const currency = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -37,6 +38,17 @@ export function VehicleDetailsPage() {
   const reduceMotion = useReducedMotion();
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const enquiryTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!vehicle) return;
+    trackAnalyticsEvent({
+      eventType: 'VEHICLE_DETAIL_VIEWED',
+      route: `/inventory/${vehicle.slug}`,
+      vehicleId: vehicle.id,
+      vehicleSlug: vehicle.slug,
+      vehicleLabel: `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim}`,
+    });
+  }, [vehicle]);
 
   useEffect(() => {
     if (!isEnquiryOpen) return;

@@ -3,9 +3,11 @@ import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
 import { DocumentMetadata } from './DocumentMetadata';
 import { RouteScrollReset } from './RouteScrollReset';
+import { useAnalyticsTracking } from '../features/analytics/hooks/useAnalyticsTracking';
 
 export function SiteLayout() {
   const location = useLocation();
+  useAnalyticsTracking();
   const isVehicleDetailRoute = /^\/inventory\/[^/]+$/.test(location.pathname);
 
   return (
