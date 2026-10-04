@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CarFront, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { fetchInventory, fetchInventoryOptions } from '../api';
@@ -10,7 +10,10 @@ import { trackAnalyticsEvent } from '../../analytics/hooks/useAnalyticsTracking'
 const INVENTORY_PAGE_SIZE = 12;
 
 export function InventoryPage() {
+  const [searchDraft, setSearchDraft] = useState('');
   const [search, setSearch] = useState('');
+  const [searchSubmission, setSearchSubmission] = useState(0);
+  const lastTrackedInteractionRef = useRef('');
   const [make, setMake] = useState('all');
   const [fuel, setFuel] = useState('all');
   const [sort, setSort] = useState<InventorySort>('featured');
@@ -40,9 +43,13 @@ export function InventoryPage() {
   const lastResult = inventory.data
     ? Math.min(page * INVENTORY_PAGE_SIZE, inventory.data.total)
     : 0;
-  const updateSearch = (value: string) => {
-    setSearch(value);
+  const updateSearchDraft = (value: string) => {
+    setSearchDraft(value);
+  };
+  const submitSearch = () => {
+    setSearch(searchDraft.trim());
     setPage(1);
+    setSearchSubmission((submission) => submission + 1);
   };
   const updateMake = (value: string) => {
     setMake(value);
@@ -57,6 +64,7 @@ export function InventoryPage() {
     setPage(1);
   };
   const clearFilters = () => {
+    setSearchDraft('');
     setSearch('');
     setMake('all');
     setFuel('all');
@@ -66,11 +74,18 @@ export function InventoryPage() {
   useEffect(() => {
     if (
       inventory.isLoading ||
+      inventory.isFetching ||
       inventory.isError ||
       (!search && make === 'all' && fuel === 'all' && page === 1)
     )
       return;
+
+    const interactionKey = JSON.stringify([searchSubmission, search, make, fuel, sort, page]);
+    if (lastTrackedInteractionRef.current === interactionKey) return;
+
     const timer = window.setTimeout(() => {
+      if (lastTrackedInteractionRef.current === interactionKey) return;
+      lastTrackedInteractionRef.current = interactionKey;
       trackAnalyticsEvent({
         eventType: 'INVENTORY_SEARCHED',
         route: '/inventory',
@@ -80,16 +95,19 @@ export function InventoryPage() {
         sort,
         resultCount: inventory.data?.total ?? 0,
       });
-    }, 600);
+    }, 1500);
+
     return () => window.clearTimeout(timer);
   }, [
     fuel,
     inventory.data?.total,
+    inventory.isFetching,
     inventory.isError,
     inventory.isLoading,
     make,
     page,
     search,
+    searchSubmission,
     sort,
   ]);
 
@@ -109,13 +127,14 @@ export function InventoryPage() {
 
       <section className="inventory-results" aria-label="Available vehicles">
         <InventoryFilters
-          search={search}
+          search={searchDraft}
           make={make}
           fuel={fuel}
           sort={sort}
           makes={options.data?.makes ?? []}
           fuels={options.data?.fuelTypes ?? []}
-          onSearchChange={updateSearch}
+          onSearchChange={updateSearchDraft}
+          onSearchSubmit={submitSearch}
           onMakeChange={updateMake}
           onFuelChange={updateFuel}
           onSortChange={updateSort}

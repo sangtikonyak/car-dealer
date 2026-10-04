@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { homepageDefaults } from '../features/homepage/homepageDefaults';
@@ -45,5 +45,14 @@ describe('Header inventory CTA', () => {
     renderHeader('/inventory/bmw-4-series-430i');
 
     expect(screen.getByRole('link', { name: /back home/i })).toHaveAttribute('href', '/');
+  });
+
+  it('provides the collapsed navigation control for tablet and mobile widths', () => {
+    renderHeader('/inventory');
+
+    const menuButton = screen.getByRole('button', { name: 'Open navigation' });
+    expect(menuButton).toHaveClass('lg:hidden');
+    fireEvent.click(menuButton);
+    expect(screen.getByRole('navigation', { name: 'Mobile navigation' })).toBeInTheDocument();
   });
 });

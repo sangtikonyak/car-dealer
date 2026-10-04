@@ -8,6 +8,7 @@ import type {
 } from './analytics.types.js';
 
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
+const searchRefinementWindowMs = 15 * 1000;
 const eventSet = {
   pageViews: 'PAGE_VIEWED',
   searches: 'INVENTORY_SEARCHED',
@@ -38,6 +39,40 @@ const resolveDateRange = (query: AnalyticsQuery): AnalyticsDateRange => {
 const increment = (map: Map<string, number>, key: string | null | undefined, amount = 1) => {
   if (!key) return;
   map.set(key, (map.get(key) ?? 0) + amount);
+};
+
+const aggregateTopSearches = (events: AnalyticsEventRecord[]): Map<string, number> => {
+  const searches = new Map<string, number>();
+  const pendingBySession = new Map<string, { label: string; lastEventAt: number }>();
+  const addPendingSearch = (search: { label: string; lastEventAt: number }) =>
+    increment(searches, search.label);
+
+  for (const event of events) {
+    if (event.eventType !== eventSet.searches) continue;
+
+    const label = event.searchTerm?.trim() || 'All inventory';
+    if (/^e2e-search-/iu.test(label)) continue;
+
+    const currentTime = event.createdAt.getTime();
+    const previous = pendingBySession.get(event.sessionId);
+    const isRefinement =
+      previous !== undefined &&
+      label !== previous.label &&
+      currentTime >= previous.lastEventAt &&
+      currentTime - previous.lastEventAt <= searchRefinementWindowMs &&
+      label.toLowerCase().startsWith(previous.label.toLowerCase());
+
+    if (isRefinement) {
+      pendingBySession.set(event.sessionId, { label, lastEventAt: currentTime });
+      continue;
+    }
+
+    if (previous) addPendingSearch(previous);
+    pendingBySession.set(event.sessionId, { label, lastEventAt: currentTime });
+  }
+
+  for (const pending of pendingBySession.values()) addPendingSearch(pending);
+  return searches;
 };
 
 const topItems = (map: Map<string, number>, limit = 8) =>
@@ -221,7 +256,7 @@ export class AnalyticsService {
     const sessions = new Set<string>();
     const visitors = new Map<string, Set<string>>();
     const pages = new Map<string, number>();
-    const searches = new Map<string, number>();
+    const searches = aggregateTopSearches(events);
     const makes = new Map<string, number>();
     const zeroResults = new Map<string, number>();
     const devices = new Map<string, Set<string>>();
@@ -243,7 +278,6 @@ export class AnalyticsService {
       }
       if (event.eventType === eventSet.searches) {
         searchCount += 1;
-        increment(searches, event.searchTerm || 'All inventory');
         increment(makes, event.makeSlug || undefined);
         if (event.resultCount === 0) {
           zeroResultSearches += 1;

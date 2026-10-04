@@ -87,7 +87,7 @@ const valueFor = (items: Array<{ label: string; value: number }>, label: string)
 describe('analytics end-to-end', () => {
   beforeAll(async () => prisma.$connect());
 
-  // Analytics events are intentionally retained so the E2E activity remains visible in reports.
+  // Analytics events remain stored; E2E search labels are excluded from the car ranking.
   afterAll(async () => {
     await prisma.$disconnect();
   });
@@ -200,7 +200,12 @@ describe('analytics end-to-end', () => {
     expect(after.kpis.enquiryConversionRate).toBeGreaterThan(0);
 
     expect(after.topPages).toContainEqual({ label: route, value: 2 });
-    expect(after.topSearches).toContainEqual({ label: searchTerm, value: 2 });
+    expect(after.topSearches).not.toContainEqual({ label: searchTerm, value: 2 });
+    await expect(
+      prisma.analyticsEvent.count({
+        where: { visitorId, eventType: 'INVENTORY_SEARCHED', searchTerm },
+      }),
+    ).resolves.toBe(2);
     expect(after.topMakes).toContainEqual({ label: makeSlug, value: 2 });
     expect(after.zeroResultSearches).toContainEqual({ label: searchTerm, value: 1 });
     expect(after.vehiclePerformance).toContainEqual(

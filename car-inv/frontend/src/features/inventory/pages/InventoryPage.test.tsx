@@ -6,6 +6,10 @@ import type { InventoryList, InventoryOptions } from '../api';
 import { fetchInventory, fetchInventoryOptions } from '../api';
 import { InventoryPage } from './InventoryPage';
 
+vi.mock('../../analytics/hooks/useAnalyticsTracking', () => ({
+  trackAnalyticsEvent: vi.fn(),
+}));
+
 vi.mock('../api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api')>();
   return {
@@ -112,6 +116,12 @@ describe('InventoryPage pagination', () => {
       target: { value: 'BMW' },
     });
 
+    expect(fetchInventory).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2, pageSize: 12 }),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /search cars/i }));
+
     await waitFor(() =>
       expect(fetchInventory).toHaveBeenLastCalledWith(
         expect.objectContaining({
@@ -121,5 +131,74 @@ describe('InventoryPage pagination', () => {
         }),
       ),
     );
+  });
+
+  it('only searches and records analytics after explicit submission', async () => {
+    const { trackAnalyticsEvent } = await import('../../analytics/hooks/useAnalyticsTracking');
+    renderPage();
+
+    const search = screen.getByRole('searchbox', { name: /search cars/i });
+    fireEvent.change(search, { target: { value: 'Hyu' } });
+    fireEvent.change(search, { target: { value: 'Hyundai' } });
+
+    expect(fetchInventory).toHaveBeenLastCalledWith(expect.objectContaining({ search: '' }));
+    expect(trackAnalyticsEvent).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /search cars/i })).toHaveClass('primary-button');
+
+    fireEvent.click(screen.getByRole('button', { name: /search cars/i }));
+
+    await waitFor(() =>
+      expect(fetchInventory).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'Hyundai' }),
+      ),
+    );
+    expect(trackAnalyticsEvent).not.toHaveBeenCalled();
+
+    await waitFor(
+      () => {
+        expect(trackAnalyticsEvent).toHaveBeenCalledOnce();
+        expect(trackAnalyticsEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            eventType: 'INVENTORY_SEARCHED',
+            searchTerm: 'Hyundai',
+            route: '/inventory',
+          }),
+        );
+      },
+      { timeout: 3500 },
+    );
+  });
+
+  it('submits with Enter and trims surrounding whitespace', async () => {
+    const { trackAnalyticsEvent } = await import('../../analytics/hooks/useAnalyticsTracking');
+    renderPage();
+
+    const search = screen.getByRole('searchbox', { name: /search cars/i });
+    fireEvent.change(search, { target: { value: '  Hyundai  ' } });
+    fireEvent.submit(screen.getByRole('search'));
+
+    await waitFor(() =>
+      expect(fetchInventory).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'Hyundai' }),
+      ),
+    );
+    await waitFor(
+      () => {
+        expect(trackAnalyticsEvent).toHaveBeenCalledOnce();
+        expect(trackAnalyticsEvent).toHaveBeenCalledWith(
+          expect.objectContaining({ eventType: 'INVENTORY_SEARCHED', searchTerm: 'Hyundai' }),
+        );
+      },
+      { timeout: 3500 },
+    );
+  });
+
+  it('does not record an untouched inventory page', async () => {
+    const { trackAnalyticsEvent } = await import('../../analytics/hooks/useAnalyticsTracking');
+    renderPage();
+
+    await new Promise((resolve) => window.setTimeout(resolve, 1600));
+
+    expect(trackAnalyticsEvent).not.toHaveBeenCalled();
   });
 });

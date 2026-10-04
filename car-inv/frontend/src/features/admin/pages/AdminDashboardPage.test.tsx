@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { SnackbarProvider } from '../../../components/Snackbar';
+import { homepageDefaults } from '../../homepage/homepageDefaults';
 import { AdminDashboardPage } from './AdminDashboardPage';
 
 vi.mock('../hooks/useAdminSession', () => ({
@@ -40,9 +41,13 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-const renderDashboard = (initialEntry = '/admin') => {
+const renderDashboard = (initialEntry = '/admin', brandName = homepageDefaults.site.brandName) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.setQueryData(['homepage-content'], {
+    ...homepageDefaults,
+    site: { ...homepageDefaults.site, brandName, brandMark: 'N' },
   });
 
   return render(
@@ -85,5 +90,15 @@ describe('AdminDashboardPage navigation', () => {
 
     expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
     expect(screen.queryByText('Newsletter')).not.toBeInTheDocument();
+  });
+
+  it('uses the saved brand name and mark in the sidebar', () => {
+    renderDashboard('/admin', 'Northstar Motors');
+
+    expect(
+      screen.getByRole('link', { name: 'Northstar Motors admin dashboard home' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('N')).toBeInTheDocument();
+    expect(screen.getByText('Northstar Motors control room')).toBeInTheDocument();
   });
 });

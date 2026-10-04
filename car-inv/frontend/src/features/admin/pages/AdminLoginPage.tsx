@@ -2,12 +2,16 @@ import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DocumentMetadata } from '../../../app/DocumentMetadata';
+import { useHomepageContent } from '../../homepage/hooks/useHomepageContent';
+import { AdminBrandLockup } from '../components/AdminBrandLockup';
 import { useAdminLogin, useAdminSession } from '../hooks/useAdminSession';
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
   const session = useAdminSession();
   const login = useAdminLogin();
+  const { data: homepageContent } = useHomepageContent();
+  const { brandName, brandMark } = homepageContent.site;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,9 +32,8 @@ export function AdminLoginPage() {
     <main className="admin-auth-page">
       <DocumentMetadata />
       <section className="admin-auth-brand-panel">
-        <Link className="admin-brand-lockup" to="/" aria-label="Back to Driva homepage">
-          <span className="admin-brand-mark">D</span>
-          <span>Driva</span>
+        <Link className="admin-brand-lockup" to="/" aria-label={`Back to ${brandName} homepage`}>
+          <AdminBrandLockup brandName={brandName} brandMark={brandMark} />
         </Link>
         <div className="admin-auth-visual" aria-hidden="true">
           <div className="admin-auth-orbit admin-auth-orbit-one" />
@@ -40,7 +43,7 @@ export function AdminLoginPage() {
           <span className="admin-auth-pill admin-auth-pill-bottom">Admin workspace · 01</span>
         </div>
         <div className="admin-auth-brand-copy">
-          <p className="admin-kicker">DRIVA CONTROL ROOM</p>
+          <p className="admin-kicker">{brandName} CONTROL ROOM</p>
           <h1>Keep every detail worth driving home.</h1>
           <p>
             Manage your homepage, media library and buyer communications from one calm workspace.

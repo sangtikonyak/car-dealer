@@ -1208,6 +1208,13 @@ a.showroom-detail-value:hover {
   margin-block: 2.1rem 1.5rem;
 }
 
+.inventory-search-form {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  gap: 0.65rem;
+}
+
 .inventory-search,
 .inventory-select-label {
   display: flex;
@@ -1224,6 +1231,12 @@ a.showroom-detail-value:hover {
 .inventory-search {
   min-width: 250px;
   flex: 1;
+}
+
+.inventory-search-submit {
+  min-height: 48px;
+  padding: 0 1.1rem;
+  white-space: nowrap;
 }
 
 .inventory-search input,
@@ -2607,6 +2620,35 @@ a.showroom-detail-value:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .inventory-page {
+    min-width: 0;
+    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2.5rem) 4rem;
+  }
+
+  .inventory-filter-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .inventory-search-form {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-search,
+  .inventory-select-label {
+    min-width: 0;
+  }
+
+  .inventory-select-label select {
+    min-width: 0;
+  }
+
+  .inventory-sort {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+
   .latest-listings-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2701,6 +2743,23 @@ a.showroom-detail-value:hover {
   .footer-global-links {
     grid-template-columns: repeat(3, max-content);
     gap: 0.8rem 1.5rem;
+  }
+
+  .inventory-heading-row {
+    align-items: flex-start;
+  }
+
+  .inventory-heading h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .vehicle-card-content > div:first-child {
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .vehicle-card-price-wrap {
+    text-align: left;
   }
 }
 
@@ -2845,7 +2904,15 @@ a.showroom-detail-value:hover {
 
   .inventory-search {
     min-width: 0;
+    flex: 1;
+  }
+
+  .inventory-search-form {
     grid-column: 1 / -1;
+  }
+
+  .inventory-search-submit {
+    padding-inline: 0.85rem;
   }
 
   .inventory-select-label {
@@ -13289,4 +13356,25 @@ a.showroom-detail-value:hover {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.admin-brand-mark-image-frame {
+  overflow: hidden;
+  padding: 0.2rem;
+  background: transparent;
+}
+
+.admin-brand-mark-image-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
+.admin-brand-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

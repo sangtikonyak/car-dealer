@@ -117,4 +117,52 @@ describe('AnalyticsService', () => {
     ).rejects.toThrow('cannot exceed 366 days');
     expect(repository.listEvents).not.toHaveBeenCalled();
   });
+
+  it('combines same-session prefix refinements and omits retained E2E fixture searches', async () => {
+    const sessionId = 'session-search-refinement';
+    const repository = {
+      listEvents: vi.fn().mockResolvedValue([
+        event({
+          eventType: 'INVENTORY_SEARCHED',
+          sessionId,
+          searchTerm: 'T',
+          createdAt: new Date('2026-10-02T10:00:00.000Z'),
+        }),
+        event({
+          eventType: 'INVENTORY_SEARCHED',
+          sessionId,
+          searchTerm: 'Tes',
+          createdAt: new Date('2026-10-02T10:00:04.000Z'),
+        }),
+        event({
+          eventType: 'INVENTORY_SEARCHED',
+          sessionId,
+          searchTerm: 'Tesla',
+          createdAt: new Date('2026-10-02T10:00:08.000Z'),
+        }),
+        event({
+          eventType: 'INVENTORY_SEARCHED',
+          sessionId,
+          searchTerm: 'Tesla',
+          createdAt: new Date('2026-10-02T10:01:00.000Z'),
+        }),
+        event({
+          eventType: 'INVENTORY_SEARCHED',
+          sessionId: 'session-e2e-fixture',
+          searchTerm: 'e2e-search-retained-fixture',
+          createdAt: new Date('2026-10-02T10:02:00.000Z'),
+        }),
+      ]),
+      listPurchasedEnquiries: vi.fn().mockResolvedValue([]),
+      create: vi.fn(),
+    } as unknown as AnalyticsRepository;
+
+    const result = await new AnalyticsService(repository).overview({
+      from: '2026-10-01',
+      to: '2026-10-02',
+    });
+
+    expect(result.topSearches).toEqual([{ label: 'Tesla', value: 2 }]);
+    expect(result.kpis.searches).toBe(5);
+  });
 });

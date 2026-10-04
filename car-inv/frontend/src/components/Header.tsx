@@ -55,7 +55,7 @@ export function Header() {
         </motion.div>
 
         <nav
-          className="hidden items-center gap-9 text-sm font-semibold text-neutral-800 md:flex"
+          className="hidden items-center gap-9 text-sm font-semibold text-neutral-800 lg:flex"
           aria-label="Primary navigation"
         >
           {navigation.map((item, index) => (
@@ -82,7 +82,7 @@ export function Header() {
         </nav>
 
         <motion.div
-          className="hidden md:block"
+          className="hidden lg:block"
           whileHover={shouldReduceMotion ? undefined : { y: -2 }}
           whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
         >
@@ -98,7 +98,7 @@ export function Header() {
 
         <motion.button
           type="button"
-          className="grid size-10 place-items-center rounded-full bg-neutral-950 text-white md:hidden"
+          className="grid size-10 place-items-center rounded-full bg-neutral-950 text-white lg:hidden"
           aria-expanded={isOpen}
           aria-controls="mobile-menu"
           aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
@@ -113,7 +113,7 @@ export function Header() {
         {isOpen ? (
           <motion.nav
             id="mobile-menu"
-            className="absolute inset-x-5 top-[76px] flex flex-col rounded-[1.75rem] border border-black/7 bg-white p-5 shadow-xl md:hidden"
+            className="absolute inset-x-5 top-[76px] flex flex-col rounded-[1.75rem] border border-black/7 bg-white p-5 shadow-xl lg:hidden"
             aria-label="Mobile navigation"
             initial={shouldReduceMotion ? false : { opacity: 0, y: -10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

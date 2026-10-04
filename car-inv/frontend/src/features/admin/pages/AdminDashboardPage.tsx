@@ -39,6 +39,8 @@ import { AdminEnquiriesPanel } from '../components/AdminEnquiriesPanel';
 import { useSnackbar } from '../../../components/Snackbar';
 import { DocumentMetadata } from '../../../app/DocumentMetadata';
 import { AnalyticsPage } from '../../analytics/pages/AnalyticsPage';
+import { useHomepageContent } from '../../homepage/hooks/useHomepageContent';
+import { AdminBrandLockup } from '../components/AdminBrandLockup';
 
 type DashboardSection = 'overview' | 'homepage' | 'inventory' | 'media' | 'enquiries' | 'analytics';
 type EnquiryDateRange = { from: string; to: string };
@@ -81,6 +83,7 @@ export function AdminDashboardPage() {
   const queryClient = useQueryClient();
   const { showSnackbar } = useSnackbar();
   const session = useAdminSession();
+  const { data: homepageContent } = useHomepageContent();
   const logout = useAdminLogout();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -168,11 +171,17 @@ export function AdminDashboardPage() {
       <DocumentMetadata />
       <aside className={`admin-sidebar ${sidebarOpen ? '' : 'admin-sidebar-collapsed'}`}>
         <div className="admin-sidebar-top">
-          <Link className="admin-sidebar-brand" to="/admin" aria-label="Admin dashboard home">
-            <span className="admin-brand-mark">D</span>
-            {sidebarOpen ? (
-              <span>{section === 'analytics' ? 'Driva' : 'Driva control room'}</span>
-            ) : null}
+          <Link
+            className="admin-sidebar-brand"
+            to="/admin"
+            aria-label={`${homepageContent.site.brandName} admin dashboard home`}
+          >
+            <AdminBrandLockup
+              brandName={homepageContent.site.brandName}
+              brandMark={homepageContent.site.brandMark}
+              showName={sidebarOpen}
+              suffix={sidebarOpen && section !== 'analytics' ? 'control room' : undefined}
+            />
           </Link>
           <button
             className="admin-sidebar-collapse"
